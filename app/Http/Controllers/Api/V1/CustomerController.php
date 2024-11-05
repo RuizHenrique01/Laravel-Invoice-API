@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Resources\V1\CustomerResource;
 use App\Http\Resources\V1\CustomerCollection;
 
-use App\Services\V1\CustomerQuery;
+use App\Filters\V1\CustomerFilter;
 
 class CustomerController extends Controller
 {
@@ -20,11 +20,12 @@ class CustomerController extends Controller
      */
     public function index(Request $request)
     {
-        $filter = new CustomerQuery();
+        $filter = new CustomerFilter();
         $queryItems = $filter->transform($request);
 
         if(count($queryItems)){
-            return new CustomerCollection(Customer::where($queryItems)->paginate());
+            $customerPaginated = Customer::where($queryItems)->paginate();
+            return new CustomerCollection($customerPaginated->appends($request->query()));
         }
 
         return new CustomerCollection(Customer::paginate());
