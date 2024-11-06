@@ -21,14 +21,14 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $filter = new CustomerFilter();
+        $includeInvoices = $request->query("includeInvoices");
         $queryItems = $filter->transform($request);
+        $customerPaginated = Customer::where($queryItems);
 
-        if(count($queryItems)){
-            $customerPaginated = Customer::where($queryItems)->paginate();
-            return new CustomerCollection($customerPaginated->appends($request->query()));
-        }
+        if($includeInvoices)
+            $customerPaginated->with('invoices');
 
-        return new CustomerCollection(Customer::paginate());
+        return new CustomerCollection($customerPaginated->paginate()->appends($request->query()));
     }
 
     /**
@@ -52,6 +52,11 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
+        $includeInvoices = request()->query("includeInvoices");
+
+        if($includeInvoices)
+            $customer->loadMissing("invoices");
+
         return new CustomerResource($customer);
     }
 
